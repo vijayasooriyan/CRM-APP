@@ -9,6 +9,54 @@ const generateToken = (userId, email) => {
   });
 };
 
+// Register controller
+exports.register = async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // Validation
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'Username, email and password are required' });
+    }
+
+    if (!validateEmail(email)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      const field = existingUser.email === email.toLowerCase() ? 'Email' : 'Username';
+      return res.status(400).json({ message: `${field} already exists` });
+    }
+
+    // Create user
+    const user = new User({ username, email, password, role: 'salesperson' });
+    await user.save();
+
+    // Generate token
+    const token = generateToken(user._id, user.email);
+
+    res.status(201).json({
+      message: 'Registration successful',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
+};
+
 // Login controller
 exports.login = async (req, res) => {
   try {

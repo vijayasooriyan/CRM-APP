@@ -3,6 +3,7 @@ import api from './api';
 // Authentication API calls
 export const authService = {
   login: (email, password) => api.post('/auth/login', { email, password }),
+  register: (username, email, password) => api.post('/auth/register', { username, email, password }),
   getCurrentUser: () => api.get('/auth/me'),
 };
 

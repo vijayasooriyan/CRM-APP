@@ -4,23 +4,39 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { Toast } from '@/components/ui';
 
-export const LoginPage = () => {
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('password123');
+export const RegisterPage = () => {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
-  const { login } = useAuth();
+  const { register } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+
+    if (!username || !email || !password || !confirmPassword) {
+      setError('All fields are required');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
     try {
-      await login(email, password);
-      setToast({ message: 'Welcome back!', type: 'success' });
+      await register(username, email, password);
+      setToast({ message: 'Account created successfully!', type: 'success' });
       setTimeout(() => navigate('/dashboard'), 800);
     } catch (err) {
       setError(err.message);
@@ -31,7 +47,7 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex transition-colors duration-300 bg-gradient-to-br from-gray-50 via-indigo-50/30 to-violet-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+    <div className="min-h-screen flex transition-colors duration-300 bg-gradient-to-br from-gray-50 via-violet-50/30 to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       {/* Theme toggle */}
       <button onClick={toggleTheme} className="absolute top-5 right-5 p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-10 shadow-sm">
         {isDark ? (
@@ -43,17 +59,17 @@ export const LoginPage = () => {
 
       {/* Left panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700"/>
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-700"/>
         <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px)', backgroundSize: '50px 50px'}}/>
         <div className="relative z-10 flex flex-col justify-center px-16 text-white">
           <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mb-8 border border-white/20">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           </div>
-          <h1 className="text-4xl font-bold mb-4">CRM<span className="text-indigo-200">Pro</span></h1>
-          <p className="text-xl text-indigo-100 mb-6 leading-relaxed">Manage your leads, track deals, and grow your business — all in one place.</p>
+          <h1 className="text-4xl font-bold mb-4">Join CRM<span className="text-violet-200">Pro</span></h1>
+          <p className="text-xl text-violet-100 mb-6 leading-relaxed">Start managing your leads like a pro. Free to get started.</p>
           <div className="space-y-3">
-            {['Real-time dashboard analytics', 'Lead pipeline management', 'Team collaboration tools'].map((feat) => (
-              <div key={feat} className="flex items-center gap-3 text-indigo-100">
+            {['Set up in under 2 minutes', 'No credit card required', 'Full access to all features'].map((feat) => (
+              <div key={feat} className="flex items-center gap-3 text-violet-100">
                 <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
                 </div>
@@ -64,23 +80,27 @@ export const LoginPage = () => {
         </div>
       </div>
 
-      {/* Right panel - Login form */}
+      {/* Right panel - Register form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md animate-fade-in">
-          {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
             </div>
             <span className="text-2xl font-bold text-gray-900 dark:text-white">CRM<span className="text-indigo-500">Pro</span></span>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome back</h2>
-            <p className="text-gray-500 dark:text-gray-400 mt-1.5">Sign in to your account to continue</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create your account</h2>
+            <p className="text-gray-500 dark:text-gray-400 mt-1.5">Get started with your free account</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Username</label>
+              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} disabled={loading} placeholder="johndoe"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all"/>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} placeholder="you@example.com"
@@ -88,7 +108,12 @@ export const LoginPage = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading} placeholder="••••••••"
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading} placeholder="Minimum 6 characters"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all"/>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Confirm Password</label>
+              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={loading} placeholder="••••••••"
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all"/>
             </div>
 
@@ -100,22 +125,16 @@ export const LoginPage = () => {
             )}
 
             <button type="submit" disabled={loading}
-              className="w-full py-2.5 px-4 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl shadow-lg shadow-indigo-500/25 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2">
+              className="w-full py-2.5 px-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white font-medium rounded-xl shadow-lg shadow-violet-500/25 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2">
               {loading && <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Create account</Link>
+            Already have an account?{' '}
+            <Link to="/login" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Sign in</Link>
           </p>
-
-          <div className="mt-8 p-4 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl border border-indigo-200 dark:border-indigo-500/20">
-            <p className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-1">Demo Credentials</p>
-            <p className="text-xs text-indigo-600 dark:text-indigo-400">Email: admin@example.com</p>
-            <p className="text-xs text-indigo-600 dark:text-indigo-400">Password: password123</p>
-          </div>
         </div>
       </div>
 
