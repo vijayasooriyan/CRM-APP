@@ -1,0 +1,22 @@
+import api from './api';
+
+// Authentication API calls
+export const authService = {
+  login: (email, password) => api.post('/auth/login', { email, password }),
+  getCurrentUser: () => api.get('/auth/me'),
+};
+
+// Leads API calls
+export const leadsService = {
+  getAllLeads: (params) => api.get('/leads', { params }),
+  getLeadById: (id) => api.get(`/leads/${id}`),
+  createLead: (data) => api.post('/leads', data),
+  updateLead: (id, data) => api.put(`/leads/${id}`, data),
+  deleteLead: (id) => api.delete(`/leads/${id}`),
+  addNote: (leadId, noteData) => api.post(`/leads/${leadId}/notes`, noteData),
+};
+
+// Dashboard API calls
+export const dashboardService = {
+  getStats: () => api.get('/dashboard'),
+};
