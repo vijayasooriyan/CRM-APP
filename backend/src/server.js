@@ -49,7 +49,11 @@ app.use('/api/dashboard', dashboardRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ message: 'Server is running' });
+  res.status(200).json({ 
+    message: 'Server is running',
+    version: '1.0.2-cors-fix',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // 404 handler
