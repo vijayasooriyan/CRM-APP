@@ -1,72 +1,60 @@
-# 🚀 FireCRM: Professional Lead Management System
+# 🏆 FireCRM: Full-Stack Lead Management System
 
-FireCRM is a high-performance, full-stack CRM platform designed to streamline sales pipelines, track lead engagement, and provide actionable analytics. Built with the **MERN stack**, it features a sophisticated lead scoring engine, automated activity auditing, and real-time dashboard metrics.
+> **Intern Developer Assessment Submission**
+> A production-ready CRM built to demonstrate full-stack architecture, secure authentication, and advanced data auditing.
 
-![Dashboard Preview](https://via.placeholder.com/1200x600/060810/FF5B14?text=FireCRM+Dashboard+Interface)
-
-## 📑 Table of Contents
-- [Overview](#overview)
-- [Tech Stack](#tech-stack)
-- [Key Features](#key-features)
-- [CI/CD & Deployment](#cicd--deployment)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Lead Scoring Logic](#lead-scoring-logic)
-- [Known Limitations](#known-limitations)
-- [Reflection](#reflection)
+## 🔗 Live Links
+- **Deployed Application**: [https://crm-app-ten-delta.vercel.app](https://crm-app-ten-delta.vercel.app)
+- **Demo Video**: [Link to Loom/YouTube Video Here]
+- **API Health Check**: [https://crm-app-mxs0.onrender.com/api/health](https://crm-app-mxs0.onrender.com/api/health)
 
 ---
 
-## 🧐 Overview
-FireCRM was built to solve the "stale lead" problem in modern sales teams. It doesn't just store data; it analyzes it. By calculating a dynamic **Lead Score (0-100)** based on deal value and engagement, sales teams can prioritize the most valuable prospects instantly.
+## 📖 Project Overview
+FireCRM is a specialized Lead Management System designed for small sales teams. It streamlines the lifecycle of a lead from initial contact to a "Won" deal. Unlike a simple database, FireCRM includes **Lead Scoring** to help sales reps prioritize their day and an **Activity Audit Log** to ensure every interaction is tracked.
+
+### Core Deliverables Met:
+- [x] **Secure Authentication**: JWT-based login with HTTP-Only Cookies.
+- [x] **Full CRUD**: Lead creation, updates, notes, and deletion.
+- [x] **Dynamic Dashboard**: Aggregated metrics for sales performance.
+- [x] **Search & Filter**: Advanced filtering by status, source, and assigned user.
+- [x] **Persistence**: MongoDB Atlas integration.
+
+---
 
 ## 🛠 Tech Stack
-- **Frontend**: React 19, Vite, Tailwind CSS (Vanilla CSS variables for custom theming)
-- **Backend**: Node.js, Express.js, JWT Authentication
-- **Database**: MongoDB (Mongoose ODM)
-- **Deployment**: Vercel (Frontend), Render (Backend)
-- **CI/CD**: GitHub Actions
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React 19, Vite, Tailwind CSS, Axios |
+| **Backend** | Node.js, Express.js |
+| **Database** | MongoDB, Mongoose ODM |
+| **Auth** | JSON Web Tokens (JWT), Bcrypt.js, Cookie-Parser |
+| **DevOps** | GitHub Actions (CI/CD), Vercel (Frontend), Render (Backend) |
 
 ---
 
-## ✨ Key Features
-- **📊 Advanced Analytics Dashboard**: Real-time tracking of Open Deals, Conversion Rates, and Projected Revenue.
-- **🎯 Smart Lead Scoring**: Custom algorithm that scores leads based on status, source, and deal value.
-- **🕒 Activity Audit Log**: Every change (status update, note added) is automatically logged with a timestamp.
-- **🚩 Stale Lead Detection**: System automatically flags leads that haven't been contacted in 14+ days.
-- **🔐 Secure Auth**: JWT-based authentication with secure, HTTP-only cookies for production.
-- **📱 Responsive UI**: Premium dark-mode aesthetic designed for high-resolution displays.
+## 🌟 Bonus Features (Product Thinking)
+To improve the CRM for real-world sales teams, I implemented:
+1.  **Lead Scoring Engine**: A proprietary algorithm that assigns a 0-100 score based on deal value, source credibility, and current status.
+2.  **Automated Activity Audit**: A Mongoose middleware that automatically logs every status change or note addition into a "Timeline" view.
+3.  **Stale Lead Detection**: Visual flags for leads that have been inactive for more than 14 days.
+4.  **CI/CD Pipeline**: Automated testing and deployment via GitHub Actions to ensure code quality.
 
 ---
 
-## 🏗 CI/CD & Deployment
-This project uses a modern automated pipeline:
-- **GitHub Actions**: On every push to `main`, the system runs a CI job to install dependencies and verify the build.
-- **Backend (Render)**: Automatically redeploys when the GitHub build passes.
-- **Frontend (Vercel)**: Global CDN deployment with custom SPA routing (`vercel.json`).
-- **Dynamic CORS**: Backend automatically trusts any `.vercel.app` deployment, ensuring seamless login across preview environments.
+## ⚙️ How to Run Locally
 
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js v20+
-- MongoDB Atlas account (or local MongoDB)
-
-### 1. Clone & Install
-```bash
-git clone https://github.com/vijayasooriyan/CRM-APP.git
-cd CRM-APP
-```
+### 1. Prerequisites
+- Node.js (v20+)
+- A MongoDB Connection String (Atlas or Local)
 
 ### 2. Backend Setup
 ```bash
 cd backend
 npm install
 cp .env.example .env
-# Update .env with your MongoDB URI
-npm run seed  # Creates the admin user
+# Fill in your MONGODB_URI and JWT_SECRET
+npm run seed  # CRITICAL: Creates the test admin user
 npm run dev
 ```
 
@@ -75,52 +63,52 @@ npm run dev
 cd ../frontend
 npm install
 cp .env.example .env
-# Set VITE_API_URL=http://localhost:5000/api
+# Set VITE_API_URL to http://localhost:5000/api
 npm run dev
 ```
 
-### 🔑 Test Credentials
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **Admin** | `admin@example.com` | `password123` |
+---
+
+## 🔐 Test Login Credentials
+| Field | Value |
+| :--- | :--- |
+| **Email** | `admin@example.com` |
+| **Password** | `password123` |
 
 ---
 
 ## 🔑 Environment Variables
 
 ### Backend (`/backend/.env`)
-| Variable | Description |
-| :--- | :--- |
-| `MONGODB_URI` | Connection string for MongoDB Atlas |
-| `JWT_SECRET` | Secret key for signing tokens |
-| `FRONTEND_URL` | The URL of your live frontend (for CORS) |
-| `NODE_ENV` | Set to `production` in live environments |
+- `MONGODB_URI`: MongoDB connection string.
+- `JWT_SECRET`: Secret for token signing.
+- `FRONTEND_URL`: URL for CORS allow-listing.
+- `NODE_ENV`: Set to `production` or `development`.
 
 ### Frontend (`/frontend/.env`)
-| Variable | Description |
-| :--- | :--- |
-| `VITE_API_URL` | The URL of your backend API (ending in /api) |
+- `VITE_API_URL`: Backend API URL (e.g., `http://localhost:5000/api`).
 
 ---
 
-## 🎯 Lead Scoring Logic
-The **Lead Score** is a proprietary virtual field in the Mongoose model:
-- **Base Score**: Depends on `status` (e.g., `Qualified` = 50, `Proposal Sent` = 80).
-- **Multiplier**: High-value deals (`>$50,000`) get a +15 point boost.
-- **Source Weight**: Referrals get a +10 point boost over cold emails.
+## 🗄 Database Setup
+The project uses **MongoDB**. 
+1.  **Schema**: Defined using Mongoose in `backend/src/models/`.
+2.  **Indexing**: Text indexes are used on `leadName`, `companyName`, and `email` for high-performance search.
+3.  **Seeding**: Use `npm run seed` in the backend directory to populate the database with the required test user and sample leads.
 
 ---
 
 ## ⚠️ Known Limitations
-- **File Uploads**: Currently, the system does not support document uploads (PDFs/Invoices).
-- **Email Integration**: Follow-up notifications are internal; they do not send real emails yet.
-- **Multi-tenancy**: Designed for a single organization.
+- **Concurrency**: Basic locking for lead updates is not implemented.
+- **Attachments**: The current version does not support PDF or image uploads for leads.
+- **Email Notifications**: Alerts are currently UI-only and do not send external SMTP emails.
 
 ---
 
 ## 🧠 Reflection
-Building FireCRM taught me the critical importance of **Cross-Origin Resource Sharing (CORS)** and **Cookie Security** in production environments. The biggest challenge was ensuring that JWT cookies were correctly passed between different top-level domains (Vercel and Render). Implementing the automated Activity Logger through Mongoose middleware also highlighted how to maintain a robust data audit trail without cluttering the business logic.
+Building FireCRM was an exercise in managing **Cross-Origin security**. Deploying a MERN app across different providers (Vercel & Render) required a deep dive into **CORS preflight requests** and **SameSite cookie attributes**. 
+
+One design decision I am proud of is the **Dynamic Lead Scoring**. Instead of just showing a list, the app helps a salesperson decide *who to call first*. This "Product Thinking" approach transforms a simple CRUD app into a useful business tool.
 
 ---
-
-**Built with ❤️ by [Vijayasooriyan Kamarajah](https://github.com/vijayasooriyan)**
+**Author**: [Vijayasooriyan Kamarajah](https://github.com/vijayasooriyan)
