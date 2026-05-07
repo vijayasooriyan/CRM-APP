@@ -23,5 +23,6 @@ router.delete('/:id', deleteLead);
 
 // Note routes
 router.post('/:id/notes', addNoteToLead);
+router.post('/:id/summarize', require('../controllers/leadController').summarizeNotes);
 
 module.exports = router;

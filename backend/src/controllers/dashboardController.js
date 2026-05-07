@@ -18,6 +18,9 @@ exports.getDashboardStats = async (req, res) => {
     // Lost leads
     const lostLeads = await Lead.countDocuments({ status: 'Lost' });
 
+    // Active leads (Open Deals) - anything that is NOT Won or Lost
+    const activeLeads = await Lead.countDocuments({ status: { $nin: ['Won', 'Lost'] } });
+
     // Total deal value
     const totalDealValueResult = await Lead.aggregate([
       {
@@ -69,16 +72,50 @@ exports.getDashboardStats = async (req, res) => {
       },
     ]);
 
+    // Top 5 leads by score
+    const topLeadsByScore = await Lead.find()
+      .sort({ leadScore: -1 })
+      .limit(5)
+      .select('leadName companyName leadScore status dealValue');
+
+    // Stale leads count (updated > 14 days ago AND not Won/Lost)
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const staleLeads = await Lead.countDocuments({
+      updatedAt: { $lt: fourteenDaysAgo },
+      status: { $nin: ['Won', 'Lost'] },
+    });
+
+    // Follow-ups due today
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+    const followUpsDueToday = await Lead.countDocuments({
+      followUpDate: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    // Overdue follow-ups (followUpDate before today)
+    const overdueFollowUps = await Lead.countDocuments({
+      followUpDate: { $lt: todayStart, $ne: null },
+      status: { $nin: ['Won', 'Lost'] },
+    });
+
     res.status(200).json({
       totalLeads,
       newLeads,
       qualifiedLeads,
       wonLeads,
       lostLeads,
+      activeLeads,
       totalDealValue,
       totalWonValue,
       leadsBySource,
       leadsByStatus,
+      topLeadsByScore,
+      staleLeads,
+      followUpsDueToday,
+      overdueFollowUps,
     });
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);

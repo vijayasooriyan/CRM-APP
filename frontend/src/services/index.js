@@ -4,6 +4,7 @@ import api from './api';
 export const authService = {
   login: (email, password) => api.post('/auth/login', { email, password }),
   register: (username, email, password) => api.post('/auth/register', { username, email, password }),
+  logout: () => api.get('/auth/logout'),
   getCurrentUser: () => api.get('/auth/me'),
 };
 
@@ -15,6 +16,7 @@ export const leadsService = {
   updateLead: (id, data) => api.put(`/leads/${id}`, data),
   deleteLead: (id) => api.delete(`/leads/${id}`),
   addNote: (leadId, noteData) => api.post(`/leads/${leadId}/notes`, noteData),
+  summarizeNotes: (id) => api.post(`/leads/${id}/summarize`),
 };
 
 // Dashboard API calls

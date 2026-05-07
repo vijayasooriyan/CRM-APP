@@ -1,10 +1,12 @@
 const Lead = require('../models/Lead');
 const { validateEmail, validatePhone, validateLeadSource, validateStatus } = require('../utils/validators');
+const { calculateLeadScore } = require('../utils/scoreCalculator');
+const { logActivity } = require('../utils/activityLogger');
 
 // Get all leads with filtering and search
 exports.getAllLeads = async (req, res) => {
   try {
-    const { status, leadSource, assignedSalesperson, search, page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    const { status, leadSource, assignedSalesperson, search, stale, page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
 
     let query = {};
 
@@ -19,6 +21,14 @@ exports.getAllLeads = async (req, res) => {
 
     if (assignedSalesperson) {
       query.assignedSalesperson = assignedSalesperson;
+    }
+
+    // Stale filter: updated > 14 days ago AND not Won/Lost
+    if (stale === 'true') {
+      const fourteenDaysAgo = new Date();
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      query.updatedAt = { $lt: fourteenDaysAgo };
+      query.status = { $nin: ['Won', 'Lost'] };
     }
 
     // Apply search
@@ -84,7 +94,7 @@ exports.getLeadById = async (req, res) => {
 // Create new lead
 exports.createLead = async (req, res) => {
   try {
-    const { leadName, companyName, email, phone, leadSource, assignedSalesperson, status, dealValue } = req.body;
+    const { leadName, companyName, email, phone, leadSource, assignedSalesperson, status, dealValue, followUpDate } = req.body;
 
     // Validation
     if (!leadName || !companyName || !email || !phone || !leadSource || !assignedSalesperson || !dealValue) {
@@ -121,8 +131,14 @@ exports.createLead = async (req, res) => {
       assignedSalesperson,
       status: status || 'New',
       dealValue,
+      followUpDate: followUpDate || null,
       notes: [],
+      activity: [],
     });
+
+    // Log creation activity
+    const userName = req.user?.email || 'System';
+    logActivity(lead, 'created', `Lead created with status "${lead.status}" and deal value $${Number(dealValue).toLocaleString()}`, userName);
 
     await lead.save();
 
@@ -140,7 +156,7 @@ exports.createLead = async (req, res) => {
 exports.updateLead = async (req, res) => {
   try {
     const { id } = req.params;
-    const { leadName, companyName, email, phone, leadSource, assignedSalesperson, status, dealValue } = req.body;
+    const { leadName, companyName, email, phone, leadSource, assignedSalesperson, status, dealValue, followUpDate } = req.body;
 
     // Validation if email is being updated
     if (email && !validateEmail(email)) {
@@ -163,26 +179,51 @@ exports.updateLead = async (req, res) => {
       return res.status(400).json({ message: 'Deal value cannot be negative' });
     }
 
-    // Update fields
-    const updateData = {};
-    if (leadName) updateData.leadName = leadName;
-    if (companyName) updateData.companyName = companyName;
-    if (email) updateData.email = email;
-    if (phone) updateData.phone = phone;
-    if (leadSource) updateData.leadSource = leadSource;
-    if (assignedSalesperson) updateData.assignedSalesperson = assignedSalesperson;
-    if (status) updateData.status = status;
-    if (dealValue !== undefined) updateData.dealValue = dealValue;
-
-    const lead = await Lead.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
-
-    if (!lead) {
+    // Fetch existing lead to log changes
+    const existingLead = await Lead.findById(id);
+    if (!existingLead) {
       return res.status(404).json({ message: 'Lead not found' });
     }
 
+    const userName = req.user?.email || 'System';
+
+    // Log specific changes
+    if (status && status !== existingLead.status) {
+      logActivity(existingLead, 'status_change', `Status changed from "${existingLead.status}" to "${status}"`, userName);
+    }
+    if (dealValue !== undefined && dealValue !== existingLead.dealValue) {
+      logActivity(existingLead, 'edit', `Deal value updated from $${existingLead.dealValue.toLocaleString()} to $${Number(dealValue).toLocaleString()}`, userName);
+    }
+    if (leadName && leadName !== existingLead.leadName) {
+      logActivity(existingLead, 'edit', `Lead name updated from "${existingLead.leadName}" to "${leadName}"`, userName);
+    }
+    if (companyName && companyName !== existingLead.companyName) {
+      logActivity(existingLead, 'edit', `Company name updated from "${existingLead.companyName}" to "${companyName}"`, userName);
+    }
+    if (followUpDate !== undefined && String(followUpDate) !== String(existingLead.followUpDate)) {
+      const dateStr = followUpDate ? new Date(followUpDate).toLocaleDateString() : 'none';
+      logActivity(existingLead, 'edit', `Follow-up date set to ${dateStr}`, userName);
+    }
+
+    // Apply updates to the existing document
+    if (leadName) existingLead.leadName = leadName;
+    if (companyName) existingLead.companyName = companyName;
+    if (email) existingLead.email = email;
+    if (phone) existingLead.phone = phone;
+    if (leadSource) existingLead.leadSource = leadSource;
+    if (assignedSalesperson) existingLead.assignedSalesperson = assignedSalesperson;
+    if (status) existingLead.status = status;
+    if (dealValue !== undefined) existingLead.dealValue = dealValue;
+    if (followUpDate !== undefined) existingLead.followUpDate = followUpDate || null;
+
+    // Recalculate score
+    existingLead.leadScore = calculateLeadScore(existingLead);
+
+    await existingLead.save();
+
     res.status(200).json({
       message: 'Lead updated successfully',
-      lead,
+      lead: existingLead,
     });
   } catch (error) {
     console.error('Error updating lead:', error);
@@ -233,6 +274,10 @@ exports.addNoteToLead = async (req, res) => {
     };
 
     lead.notes.push(note);
+
+    // Log activity for note
+    logActivity(lead, 'note', `Note added: "${content.substring(0, 80)}${content.length > 80 ? '...' : ''}"`, createdBy);
+
     await lead.save();
 
     res.status(201).json({
@@ -242,5 +287,60 @@ exports.addNoteToLead = async (req, res) => {
   } catch (error) {
     console.error('Error adding note:', error);
     res.status(500).json({ message: 'Error adding note' });
+  }
+};
+
+// Summarize notes using Grok AI
+exports.summarizeNotes = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const lead = await Lead.findById(id);
+
+    if (!lead) {
+      return res.status(404).json({ message: 'Lead not found' });
+    }
+
+    if (!lead.notes || lead.notes.length === 0) {
+      return res.status(400).json({ message: 'No notes to summarize' });
+    }
+
+    const allNotes = lead.notes.map(n => n.content).join('\n');
+    const prompt = `You are a CRM assistant. Summarize the following sales notes for lead ${lead.leadName} at ${lead.companyName} into exactly 2 sentences: first sentence covers what has happened so far, second sentence suggests the best next action for the sales rep. Be concise and specific. Notes: ${allNotes}`;
+
+    console.log(`Summarizing notes for lead: ${lead.leadName} using Groq`);
+    
+    if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'your_groq_api_key_here') {
+      console.error('GROQ_API_KEY is missing or not set in backend .env');
+      return res.status(500).json({ message: 'AI Service (Groq) not configured' });
+    }
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'You are a helpful CRM assistant that provides concise note summaries.' },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 200,
+        temperature: 0
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Groq API Error:', JSON.stringify(errorData, null, 2));
+      return res.status(response.status).json({ message: errorData.error?.message || 'Failed to generate AI summary' });
+    }
+
+    const data = await response.json();
+    res.status(200).json({ summary: data.choices[0].message.content });
+  } catch (error) {
+    console.error('Summarization error:', error);
+    res.status(500).json({ message: 'Internal server error during summarization' });
   }
 };
