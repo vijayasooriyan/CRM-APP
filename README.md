@@ -5,7 +5,7 @@
 
 ## 🔗 Live Links
 - **Deployed Application**: [https://crm-app-ten-delta.vercel.app](https://crm-app-ten-delta.vercel.app)
-- **Demo Video**: [Link to Loom/YouTube Video Here]
+- **Demo Video**: https://youtu.be/YjCgffaScTQ
 - **API Health Check**: [https://crm-app-mxs0.onrender.com/api/health](https://crm-app-mxs0.onrender.com/api/health)
 
 ---
