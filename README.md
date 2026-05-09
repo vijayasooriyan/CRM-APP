@@ -5,7 +5,7 @@
 
 ## 🔗 Live Links
 - **Deployed Application**: [https://crm-app-ten-delta.vercel.app](https://crm-app-ten-delta.vercel.app)
-- **Demo Video**: [Link to Loom/YouTube Video Here]
+- **Demo Video**: https://youtu.be/YjCgffaScTQ
 - **API Health Check**: [https://crm-app-mxs0.onrender.com/api/health](https://crm-app-mxs0.onrender.com/api/health)
 
 ---
@@ -97,12 +97,6 @@ The project uses **MongoDB**.
 3.  **Seeding**: Use `npm run seed` in the backend directory to populate the database with the required test user and sample leads.
 
 ---
-
-## ⚠️ Known Limitations
-- **Concurrency**: Basic locking for lead updates is not implemented.
-- **Attachments**: The current version does not support PDF or image uploads for leads.
-- **Email Notifications**: Alerts are currently UI-only and do not send external SMTP emails.
-
 ---
 
 ## 🧠 Reflection
